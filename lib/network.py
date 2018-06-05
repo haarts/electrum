@@ -962,7 +962,7 @@ class Network(util.DaemonThread):
 
     def on_notify_header(self, interface, header_dict):
         header_hex, height = header_dict['hex'], header_dict['height']
-        header = blockchain.deserialize_header(bfh(header_hex), height)
+        header = blockchain.deserialize_header(util.bfh(header_hex), height)
         if height < self.max_checkpoint():
             self.connection_down(interface.server)
             return
