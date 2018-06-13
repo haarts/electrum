@@ -29,6 +29,7 @@ from . import constants
 from .util import bfh, bh2u
 
 MAX_TARGET = 0x00000000FFFF0000000000000000000000000000000000000000000000000000
+BLOCK_SIZE = 80
 
 
 class MissingHeader(Exception):
@@ -72,6 +73,7 @@ def hash_header(header):
 
 # This dict contains a mapping between a checkpoint and a blockchain
 blockchains = {}
+
 
 def read_blockchains(headers_dir):
     blockchains[0] = Blockchain(headers_dir, 0, None)
@@ -168,7 +170,7 @@ class Blockchain(util.PrintError):
 
     def update_size(self):
         p = self.path()
-        self._size = os.path.getsize(p)//80 if os.path.exists(p) else 0
+        self._size = os.path.getsize(p)//BLOCK_SIZE if os.path.exists(p) else 0
 
     def verify_header(self, header, prev_hash, target):
         _hash = hash_header(header)
@@ -183,11 +185,11 @@ class Blockchain(util.PrintError):
             raise Exception("insufficient proof of work: %s vs target %s" % (int('0x' + _hash, 16), target))
 
     def verify_chunk(self, index, data):
-        num = len(data) // 80
+        num = len(data) // BLOCK_SIZE
         prev_hash = self.get_hash(index * 2016 - 1)
         target = self.get_target(index-1)
         for i in range(num):
-            raw_header = data[i*80:(i+1) * 80]
+            raw_header = data[i*BLOCK_SIZE:(i+1) * BLOCK_SIZE]
             header = deserialize_header(raw_header, index*2016 + i)
             self.verify_header(header, prev_hash, target)
             prev_hash = hash_header(header)
@@ -204,7 +206,7 @@ class Blockchain(util.PrintError):
 
     def save_chunk(self, index, chunk):
         filename = self.path()
-        d = (index * 2016 - self.checkpoint) * 80
+        d = (index * 2016 - self.checkpoint) * BLOCK_SIZE
         if d < 0:
             chunk = chunk[-d:]
             d = 0
@@ -229,10 +231,10 @@ class Blockchain(util.PrintError):
             my_data = f.read()
         self.assert_headers_file_available(parent.path())
         with open(parent.path(), 'rb') as f:
-            f.seek((checkpoint - parent.checkpoint)*80)
-            parent_data = f.read(parent_branch_size*80)
+            f.seek((checkpoint - parent.checkpoint)*BLOCK_SIZE)
+            parent_data = f.read(parent_branch_size*BLOCK_SIZE)
         self.write(parent_data, 0)
-        parent.write(my_data, (checkpoint - parent.checkpoint)*80)
+        parent.write(my_data, (checkpoint - parent.checkpoint)*BLOCK_SIZE)
         # store file path
         for b in blockchains.values():
             b.old_path = b.path()
@@ -263,7 +265,7 @@ class Blockchain(util.PrintError):
         with self.lock:
             self.assert_headers_file_available(filename)
             with open(filename, 'rb+') as f:
-                if truncate and offset != self._size*80:
+                if truncate and offset != self._size*BLOCK_SIZE:
                     f.seek(offset)
                     f.truncate()
                 f.seek(offset)
@@ -280,8 +282,8 @@ class Blockchain(util.PrintError):
         delta = header.get('block_height') - self.checkpoint
         data = bfh(serialize_header(header))
         assert delta == self.size()
-        assert len(data) == 80
-        self.write(data, delta*80)
+        assert len(data) == BLOCK_SIZE
+        self.write(data, delta*BLOCK_SIZE)
         self.swap_with_parent()
 
     def read_header(self, height):
@@ -296,11 +298,11 @@ class Blockchain(util.PrintError):
         name = self.path()
         self.assert_headers_file_available(name)
         with open(name, 'rb') as f:
-            f.seek(delta * 80)
-            h = f.read(80)
-            if len(h) < 80:
+            f.seek(delta * BLOCK_SIZE)
+            h = f.read(BLOCK_SIZE)
+            if len(h) < BLOCK_SIZE:
                 raise Exception('Expected to read a full header. This was only {} bytes'.format(len(h)))
-        if h == bytes([0])*80:
+        if h == bytes([0])*BLOCK_SIZE:
             return None
         return deserialize_header(h, height)
 
