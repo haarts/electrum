@@ -37,7 +37,7 @@ class ElectrumX(network.Network):
             callback(new_response)
         return replacing_callback
 
-    def subscribe_to_scripthashes(self, hashes, callback):
+    def subscribe_to_scripthashes(self, hashes, callback=None):
         command = 'blockchain.scripthash.subscribe'
         messages = [(command, [hash_]) for hash_ in hashes]
         invocation = lambda c: self._send(messages, c)
