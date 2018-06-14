@@ -1,0 +1,30 @@
+[
+    {
+        "dns": "mainnet1.libbitcoin.net",
+        "ports": {
+                "secure": 9081,
+                "public": 9091
+        }
+    },
+    {
+        "dns": "mainnet2.libbitcoin.net",
+        "ports": {
+                "secure": 9081,
+                "public": 9091
+        }
+    },
+    {
+        "dns": "mainnet3.libbitcoin.net",
+        "ports": {
+                "secure": 9081,
+                "public": 9091
+        }
+    },
+    {
+        "dns": "mainnet4.libbitcoin.net",
+        "ports": {
+                "secure": 9081,
+                "public": 9091
+        }
+    }
+]
