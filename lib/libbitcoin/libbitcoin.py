@@ -47,34 +47,68 @@ class Libbitcoin(Protocol, Triggers):
             os.path.join("libbitcoin", "servers.json"), [])
 
     def get_server_height(self):
-        pass
+        return self.active_server.last_height()[1]
 
     def is_connected(self):
-        return False
+        return next(
+            (True for server in self._servers if server.is_connected()),
+            False
+        )
 
     def is_connecting(self):
-        pass
+        return self._is_connecting
 
-    def get_parameters(self):
-        pass
-
+    # TODO
     def get_donation_address(self):
         pass
 
     def get_interfaces(self):
-        pass
+        return [server for server in self._servers if server.is_connected()]
 
     def get_servers(self):
         return self._servers
 
-    def fast_getaddrinfo(host, *args, **kwargs):
-        pass
+    # FIXME this method is doing a lot of things and should be split into:
+    # get_proxy
+    # get_autoconnect
+    # get_active_server
+    def get_parameters(self):
+        return self.active_server.host, \
+            self.active_server.port, \
+            self.active_server.protocol, \
+            self.proxy, \
+            self.auto_connect
 
+    # FIXME this method is doing a lof of things and should be split into:
+    # set_proxy
+    # set_autoconnect
+    # set_active_server
     def set_parameters(self, host, port, protocol, proxy, auto_connect):
-        pass
+        """ This method is used to change to the specified server.
+        This server might be new or might be known already. If unknown add
+        the server. In both cases switch to it.
 
+            'protocol' is ElectrumX specific and is dropped.
+            'proxy' is TODO
+        """
+        self.switch_to_interface(":".join([host, port]))
+
+        self.auto_connect = auto_connect
+
+    # NOTE: the name of the method is legacy in a sense. Libbitcoin doesn't
+    # have the concept of 'interface'. `switch_to_server` is a better name.
     def switch_to_interface(self, server):
-        pass
+        """ The 'server' argument is a string <host>:<port>:<protocol>
+        """
+        host, port = server.split(':')
+        server = Server({"hostname": host, "ports": {"public": port}},
+            self._client_settings)
+        if server in self._servers:
+            server = next((existing for existing in self._servers if existing == server))
+        else:
+            self._servers.append(server)
+
+        self.active_server = server
 
     def unsubscribe(self, callback):
         pass
@@ -85,6 +119,7 @@ class Libbitcoin(Protocol, Triggers):
     def run(self):
         pass
 
+    # FIXME should be called 'get_blockchain' (or 'get_blockchains' should be 'blockchains')
     def blockchain(self):
         pass
 
@@ -96,5 +131,3 @@ class Libbitcoin(Protocol, Triggers):
 
     def get_local_height(self):
         pass
-
-

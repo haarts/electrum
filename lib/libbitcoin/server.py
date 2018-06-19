@@ -32,3 +32,9 @@ class Server:
 
     def protocol(self):
         return urlparse(self.url).scheme
+
+    def __eq__(self, other):
+        return self.url == other.url
+
+    def __ne__(self, other):
+        return self.url != other.url
