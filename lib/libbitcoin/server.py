@@ -1,4 +1,5 @@
 import asyncio
+from urllib.parse import urlparse
 import pylibbitcoin.client
 
 class Server:
@@ -22,3 +23,12 @@ class Server:
 
     def last_height(self):
         return asyncio.get_event_loop().run_until_complete(self._client.last_height())
+
+    def port(self):
+        return urlparse(self.url).port
+
+    def host(self):
+        return urlparse(self.url).hostname
+
+    def protocol(self):
+        return urlparse(self.url).scheme
