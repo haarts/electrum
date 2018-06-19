@@ -4,7 +4,7 @@ import pylibbitcoin.client
 class Server:
     def __init__(self, connection_details):
         def url_from(server):
-            return "tcp://" + server["dns"] + ":" + str(server["ports"]["public"])
+            return "tcp://" + server["hostname"] + ":" + str(server["ports"]["public"])
 
         self.url = url_from(connection_details)
         self._client = pylibbitcoin.client.Client(self.url)

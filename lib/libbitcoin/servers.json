@@ -1,27 +1,27 @@
 [
     {
-        "dns": "mainnet1.libbitcoin.net",
+        "hostname": "mainnet1.libbitcoin.net",
         "ports": {
                 "secure": 9081,
                 "public": 9091
         }
     },
     {
-        "dns": "mainnet2.libbitcoin.net",
+        "hostname": "mainnet2.libbitcoin.net",
         "ports": {
                 "secure": 9081,
                 "public": 9091
         }
     },
     {
-        "dns": "mainnet3.libbitcoin.net",
+        "hostname": "mainnet3.libbitcoin.net",
         "ports": {
                 "secure": 9081,
                 "public": 9091
         }
     },
     {
-        "dns": "mainnet4.libbitcoin.net",
+        "hostname": "mainnet4.libbitcoin.net",
         "ports": {
                 "secure": 9081,
                 "public": 9091
