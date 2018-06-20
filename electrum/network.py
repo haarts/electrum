@@ -913,9 +913,9 @@ class Network(util.DaemonThread):
             self._connection_down(interface.server)
             return
 
-        chain = blockchain.check_header(header)
+        chain = blockchain.find_blockchain_containing(header)
         if interface.mode == 'backward':
-            can_connect = blockchain.can_connect(header)
+            can_connect = blockchain.find_blockchain_to_append(header)
             if can_connect and can_connect.catch_up is None:
                 interface.mode = 'catch_up'
                 interface.blockchain = can_connect
@@ -1108,17 +1108,17 @@ class Network(util.DaemonThread):
         interface.tip = height
         if interface.mode != 'default':
             return
-        b = blockchain.check_header(header)
-        if b:
-            interface.blockchain = b
+        chain = blockchain.find_blockchain_containing(header)
+        if chain:
+            interface.blockchain = chain
             self._switch_lagging_interface()
             self._notify('updated')
             self._notify('interfaces')
             return
-        b = blockchain.can_connect(header)
-        if b:
-            interface.blockchain = b
-            b.save_header(header)
+        chain = blockchain.find_blockchain_to_append(header)
+        if chain:
+            interface.blockchain = chain
+            chain.save_header(header)
             self._switch_lagging_interface()
             self._notify('updated')
             self._notify('interfaces')

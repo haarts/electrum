@@ -90,21 +90,28 @@ def read_blockchains(headers_dir):
             util.print_error("cannot connect", filename)
     return blockchains
 
-def check_header(header):
+
+def find_blockchain_containing(header):
+    """ Returns the blockchain of which the supplied header is a part.
+    """
     if type(header) is not dict:
-        return False
+        return None
 
     for b in blockchains.values():
         if b.check_header(header):
             return b
 
-    return False
+    return None
 
-def can_connect(header):
+
+def find_blockchain_to_append(header):
+    """ Return the blockchain to which the supploed header can be appended.
+    """
     for b in blockchains.values():
         if b.can_connect(header):
             return b
-    return False
+
+    return None
 
 
 class Blockchain(util.PrintError):
@@ -353,6 +360,8 @@ class Blockchain(util.PrintError):
         return bitsN << 24 | bitsBase
 
     def can_connect(self, header, check_height=True):
+        """ Determines if the supplied header can be added to this blockchain.
+        """
         if header is None:
             return False
 
@@ -371,6 +380,7 @@ class Blockchain(util.PrintError):
 
         if prev_hash != header.get('prev_block_hash'):
             return False
+
         try:
             target = self.get_target(height // 2016 - 1)
         except MissingHeader:
