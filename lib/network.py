@@ -863,7 +863,7 @@ class Network(util.DaemonThread, triggers.Triggers):
             self._connection_down(interface.server)
             return
 
-        chain = blockchain.check_header(header)
+        chain = blockchain.find_blockchain_for(header)
         if interface.mode == 'backward':
             can_connect = blockchain.can_connect(header)
             if can_connect and can_connect.catch_up is None:
@@ -1047,7 +1047,7 @@ class Network(util.DaemonThread, triggers.Triggers):
         interface.tip = height
         if interface.mode != 'default':
             return
-        b = blockchain.check_header(header)
+        b = blockchain.find_blockchain_for(header)
         if b:
             interface.blockchain = b
             self._switch_lagging_interface()
