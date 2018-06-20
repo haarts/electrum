@@ -175,7 +175,7 @@ class Network(util.DaemonThread, triggers.Triggers):
         triggers.Triggers.__init__(self)
         self.config = SimpleConfig(config) if isinstance(config, dict) else config
         self.num_server = 10 if not self.config.get('oneserver') else 0
-        self.blockchains = blockchain.read_blockchains(self.config)  # note: needs self.blockchains_lock
+        self.blockchains = blockchain.read_blockchains(self.config.path)  # note: needs self.blockchains_lock
         self.print_error("blockchains", self.blockchains.keys())
         self.blockchain_index = config.get('blockchain_index', 0)
         if self.blockchain_index not in self.blockchains.keys():

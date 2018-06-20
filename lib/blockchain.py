@@ -71,16 +71,16 @@ def hash_header(header):
 # This dict contains a mapping between a checkpoint and a blockchain
 blockchains = {}
 
-def read_blockchains(config):
-    blockchains[0] = Blockchain(config, 0, None)
-    fdir = os.path.join(util.get_headers_dir(config), 'forks')
+def read_blockchains(headers_dir):
+    blockchains[0] = Blockchain(headers_dir, 0, None)
+    fdir = os.path.join(util.get_headers_dir(headers_dir), 'forks')
     util.make_dir(fdir)
     l = filter(lambda x: x.startswith('fork_'), os.listdir(fdir))
     l = sorted(l, key = lambda x: int(x.split('_')[1]))
     for filename in l:
         checkpoint = int(filename.split('_')[2])
         parent_id = int(filename.split('_')[1])
-        b = Blockchain(config, checkpoint, parent_id)
+        b = Blockchain(headers_dir, checkpoint, parent_id)
         h = b.read_header(b.checkpoint)
         if b.parent().can_connect(h, check_height=False):
             blockchains[b.checkpoint] = b
@@ -110,8 +110,8 @@ class Blockchain(util.PrintError):
     Manages blockchain headers and their verification
     """
 
-    def __init__(self, config, checkpoint, parent_id):
-        self.config = config
+    def __init__(self, headers_dir, checkpoint, parent_id):
+        self.headers_dir = headers_dir
         self.catch_up = None # interface catching up
         self.checkpoint = checkpoint
         self.checkpoints = constants.net.CHECKPOINTS
@@ -145,7 +145,7 @@ class Blockchain(util.PrintError):
 
     def fork(parent, header):
         checkpoint = header.get('block_height')
-        self = Blockchain(parent.config, checkpoint, parent.checkpoint)
+        self = Blockchain(parent.headers_dir, checkpoint, parent.checkpoint)
         open(self.path(), 'w+').close()
         self.save_header(header)
         return self
@@ -184,7 +184,7 @@ class Blockchain(util.PrintError):
             prev_hash = hash_header(header)
 
     def path(self):
-        d = util.get_headers_dir (self.config)
+        d = util.get_headers_dir(self.headers_dir)
         filename = 'blockchain_headers'
         if self.parent_id is not None:
             filename = os.path.join(
@@ -244,7 +244,7 @@ class Blockchain(util.PrintError):
     def assert_headers_file_available(self, path):
         if os.path.exists(path):
             return
-        elif not os.path.exists(util.get_headers_dir(self.config)):
+        elif not os.path.exists(util.get_headers_dir(self.headers_dir)):
             raise FileNotFoundError('Electrum headers_dir does not exist. Was it deleted while running?')
         else:
             raise FileNotFoundError('Cannot find headers file but headers_dir is there. Should be at {}'.format(path))

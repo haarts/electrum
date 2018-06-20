@@ -350,8 +350,8 @@ def android_check_data_dir():
     return data_dir
 
 
-def get_headers_dir(config):
-    return android_headers_dir() if 'ANDROID_DATA' in os.environ else config.path
+def get_headers_dir(path):
+    return android_headers_dir() if 'ANDROID_DATA' in os.environ else path
 
 
 def assert_datadir_available(config_path):
