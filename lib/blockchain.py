@@ -35,14 +35,13 @@ class MissingHeader(Exception):
     pass
 
 
-def serialize_header(res):
-    s = int_to_hex(res.get('version'), 4) \
-        + rev_hex(res.get('prev_block_hash')) \
-        + rev_hex(res.get('merkle_root')) \
-        + int_to_hex(int(res.get('timestamp')), 4) \
-        + int_to_hex(int(res.get('bits')), 4) \
-        + int_to_hex(int(res.get('nonce')), 4)
-    return s
+def serialize_header(header):
+    return int_to_hex(header.get('version'), 4) \
+        + rev_hex(header.get('prev_block_hash')) \
+        + rev_hex(header.get('merkle_root')) \
+        + int_to_hex(int(header.get('timestamp')), 4) \
+        + int_to_hex(int(header.get('bits')), 4) \
+        + int_to_hex(int(header.get('nonce')), 4)
 
 def deserialize_header(s, height):
     if not s:
