@@ -88,7 +88,9 @@ def read_blockchains(headers_dir):
     return blockchains
 
 
-def find_blockchain_for(header):
+def find_blockchain_containing(header):
+    """ Returns the blockchain of which the supplied header is a part.
+    """
     if type(header) is not dict:
         return None
 
@@ -99,11 +101,14 @@ def find_blockchain_for(header):
     return None
 
 
-def can_connect(header):
+def find_blockchain_to_append(header):
+    """ Return the blockchain to which the supploed header can be appended.
+    """
     for b in blockchains.values():
         if b.can_connect(header):
             return b
-    return False
+
+    return None
 
 
 class Blockchain(util.PrintError):
