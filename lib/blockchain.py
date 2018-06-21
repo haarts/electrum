@@ -43,21 +43,23 @@ def serialize_header(header):
         + int_to_hex(int(header.get('bits')), 4) \
         + int_to_hex(int(header.get('nonce')), 4)
 
-def deserialize_header(s, height):
-    if not s:
-        raise Exception('Invalid header: {}'.format(s))
-    if len(s) != 80:
-        raise Exception('Invalid header length: {}'.format(len(s)))
-    hex_to_int = lambda s: int('0x' + bh2u(s[::-1]), 16)
-    h = {}
-    h['version'] = hex_to_int(s[0:4])
-    h['prev_block_hash'] = hash_encode(s[4:36])
-    h['merkle_root'] = hash_encode(s[36:68])
-    h['timestamp'] = hex_to_int(s[68:72])
-    h['bits'] = hex_to_int(s[72:76])
-    h['nonce'] = hex_to_int(s[76:80])
-    h['block_height'] = height
-    return h
+
+def deserialize_header(raw_header, height):
+    if not raw_header:
+        raise Exception('Invalid header: {}'.format(raw_header))
+    if len(raw_header) != BLOCK_SIZE:
+        raise Exception('Invalid header length: {}'.format(len(raw_header)))
+    hex_to_int = lambda raw_header: int('0x' + bh2u(raw_header[::-1]), 16)
+    header = {}
+    header['version'] = hex_to_int(raw_header[0:4])
+    header['prev_block_hash'] = hash_encode(raw_header[4:36])
+    header['merkle_root'] = hash_encode(raw_header[36:68])
+    header['timestamp'] = hex_to_int(raw_header[68:72])
+    header['bits'] = hex_to_int(raw_header[72:76])
+    header['nonce'] = hex_to_int(raw_header[76:80])
+    header['block_height'] = height
+    return header
+
 
 def hash_header(header):
     if header is None:
@@ -74,15 +76,15 @@ def read_blockchains(headers_dir):
     blockchains[0] = Blockchain(headers_dir, 0, None)
     fdir = os.path.join(util.get_headers_dir(headers_dir), 'forks')
     util.make_dir(fdir)
-    l = filter(lambda x: x.startswith('fork_'), os.listdir(fdir))
-    l = sorted(l, key = lambda x: int(x.split('_')[1]))
-    for filename in l:
+    fork_files = filter(lambda x: x.startswith('fork_'), os.listdir(fdir))
+    fork_files = sorted(fork_files, key = lambda x: int(x.split('_')[1]))
+    for filename in fork_files:
         checkpoint = int(filename.split('_')[2])
         parent_id = int(filename.split('_')[1])
-        b = Blockchain(headers_dir, checkpoint, parent_id)
-        h = b.read_header(b.checkpoint)
-        if b.parent().can_connect(h, check_height=False):
-            blockchains[b.checkpoint] = b
+        chain = Blockchain(headers_dir, checkpoint, parent_id)
+        header = chain.read_header(chain.checkpoint)
+        if chain.parent().can_connect(header, check_height=False):
+            blockchains[chain.checkpoint] = chain
         else:
             util.print_error("cannot connect", filename)
     return blockchains
