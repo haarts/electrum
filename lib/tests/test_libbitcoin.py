@@ -64,5 +64,5 @@ class TestServer(asynctest.TestCase):
             asynctest.CoroutineMock(return_value=(None, height))
         pylibbitcoin.client.Client = client_mock
 
-        server = Server({"dns": "smt", "ports": {"public": 9091}}, None)
-        self.assertEqual(height, server.last_height)
+        server = Server({"hostname": "smt", "ports": {"public": 9091}}, None)
+        self.assertEqual(height, server.last_height()[1])
