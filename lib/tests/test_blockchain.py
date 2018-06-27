@@ -1,3 +1,4 @@
+import os
 import unittest
 from unittest.mock import MagicMock
 import lib.blockchain
@@ -5,33 +6,40 @@ from lib.blockchain import Blockchain
 
 
 class TestBlockchains(unittest.TestCase):
-    def test_find_blockchain_for_wo_dict_header(self):
-        self.assertIsNone(lib.blockchain.find_blockchain_for("not a dict"))
+    def test_find_blockchain_containing_wo_dict_header(self):
+        self.assertIsNone(lib.blockchain.find_blockchain_containing("not a dict"))
 
-    def test_find_blockchain_for_w_dict_header(self):
+    def test_find_blockchain_containing_w_dict_header(self):
         lib.blockchain.blockchains = {
             0: MagicMock(autospec=Blockchain, check_header=lambda x: True)}
 
-        self.assertIsNotNone(lib.blockchain.find_blockchain_for({}))
+        self.assertIsNotNone(lib.blockchain.find_blockchain_containing({}))
 
-    def test_find_blockchain_for_and_failing(self):
+    def test_find_blockchain_containing_and_failing(self):
         lib.blockchain.blockchains = {
             0: MagicMock(autospec=Blockchain, check_header=lambda x: False)}
 
-        self.assertIsNone(lib.blockchain.find_blockchain_for({}))
+        self.assertIsNone(lib.blockchain.find_blockchain_containing({}))
 
-    def test_can_connect(self):
+    def test_find_blockchain_to_append(self):
         lib.blockchain.blockchains = {
             0: MagicMock(autospec=Blockchain, can_connect=lambda x: True)}
 
-        self.assertTrue(lib.blockchain.can_connect({}))
+        self.assertIsNotNone(lib.blockchain.find_blockchain_to_append({}))
 
-    def test_can_connect_and_failing(self):
+    def test_find_blockchain_to_append_and_failing(self):
         lib.blockchain.blockchains = {
             0: MagicMock(autospec=Blockchain, can_connect=lambda x: False)}
 
-        self.assertFalse(lib.blockchain.can_connect({}))
+        self.assertIsNone(lib.blockchain.find_blockchain_to_append({}))
 
+    def test_read_blockchains(self):
+        blockchains = lib.blockchain.read_blockchains(
+            os.path.join("lib", "tests", "blockchain"))
+        longest_chain = blockchains[0]
+        forked_at_height_2 = blockchains[2]
+        forked_from_fork_2_at_height_4 = blockchains[4]
+        self.assertEqual(3, len(blockchains))
 
 class TestBlockchain(unittest.TestCase):
     def valid_header_after_checkpoints():
