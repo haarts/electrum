@@ -5,7 +5,6 @@ class Protocol():
     See https://github.com/libbitcoin/libbitcoin-server/wiki/Query-Service
     """
 
-    # protocol calls
     def subscribe_to_scripthashes(self, hashes, callback=None):
         pass
 
