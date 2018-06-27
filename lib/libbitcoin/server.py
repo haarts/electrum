@@ -1,28 +1,35 @@
-import asyncio
+""" This module represents ONE libbitcoin backend server
+"""
 from urllib.parse import urlparse
 import pylibbitcoin.client
 
+
 class Server:
-    def __init__(self, connection_details, settings):
+    def __init__(self, connection_details, settings, loop):
         def url_from(server):
-            return "tcp://" + server["hostname"] + ":" + str(server["ports"]["public"])
+            return "tcp://" + \
+                server["hostname"] + \
+                ":" + \
+                str(server["ports"]["public"])
 
         self.url = url_from(connection_details)
         self._client = pylibbitcoin.client.Client(self.url, settings=settings)
+        self._loop = loop
+        self._last_height = None
 
     async def disconnect(self):
         return await self._client.stop()
 
     async def connect(self):
         error_code, last_height = await self._client.last_height()
-        self.last_height = last_height
+        self._last_height = last_height
         return error_code
 
     def is_connected(self):
-        return self.last_height > 0
+        return self._last_height is not None
 
     def last_height(self):
-        return asyncio.get_event_loop().run_until_complete(self._client.last_height())
+        return self._loop.run_until_complete(self._client.last_height())
 
     def port(self):
         return urlparse(self.url).port
@@ -38,3 +45,7 @@ class Server:
 
     def __ne__(self, other):
         return self.url != other.url
+
+    def __str__(self):
+        return "libbitcoin.Server(url: {}, height: {})" \
+            .format(self.url, self._last_height)
