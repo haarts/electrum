@@ -66,3 +66,10 @@ class TestServer(asynctest.TestCase):
 
         server = Server({"hostname": "smt", "ports": {"public": 9091}}, None)
         self.assertEqual(height, server.last_height()[1])
+
+    def test_is_connected(self):
+        server = Server({"hostname": "smt", "ports": {"public": 9091}}, None)
+        self.assertFalse(server.is_connected())
+
+        server._last_height = 0
+        self.assertTrue(server.is_connected())
