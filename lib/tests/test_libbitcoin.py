@@ -9,11 +9,12 @@ from lib.simple_config import SimpleConfig
 from lib.libbitcoin.libbitcoin import Libbitcoin
 from lib.libbitcoin.server import Server
 
+
 class TestLibbitcoin(unittest.TestCase):
     def setUp(self):
-        Libbitcoin._servers_from = lambda x,y: [MagicMock(autospec=Server)]
+        Libbitcoin._servers_from = lambda x, y: [MagicMock(autospec=Server)]
         self.libbitcoin = Libbitcoin(None)
-        self.libbitcoin.disconnect = lambda : None
+        self.libbitcoin.disconnect = lambda: None
 
     def tearDown(self):
         pass
