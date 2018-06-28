@@ -1,12 +1,24 @@
 """ The blockchains module manages the construction of the local representation
 of all blockchains advertised by the remote backends.
 """
+from typing import List
 import asyncio
+
+from lib.libbitcoin.server import Server
 import lib.blockchain
 
 
 class Blockchains:
-    def __init__(self, servers, blockchains):
+    """
+    There are two public methods:
+    - catch_up: for each local blockchain finds a server and syncs
+    - monitor_servers: subscribes to the headers of all servers and appends
+      where possible.
+    """
+
+    def __init__(self,
+                 servers: List[Server],
+                 blockchains: List[lib.blockchain.Blockchain]):
         self._servers = servers
         self._blockchains = blockchains
 
