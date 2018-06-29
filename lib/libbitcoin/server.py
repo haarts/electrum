@@ -28,7 +28,7 @@ class Server:
         return self._last_height is not None
 
     def last_height(self):
-        return self._loop.run_until_complete(self._client.last_height())
+        return self._client.last_height()
 
     def port(self):
         return self.connection_details["ports"]["query"][PUBLIC_PORT]
