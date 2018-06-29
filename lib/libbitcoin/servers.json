@@ -2,29 +2,54 @@
     {
         "hostname": "mainnet1.libbitcoin.net",
         "ports": {
-                "secure": 9081,
-                "public": 9091
+                "query": {
+                    "secure": 9081,
+                    "public": 9091
+                },
+                "block": {
+                    "secure": 9083,
+                    "public": 9093
+                }
         }
     },
     {
         "hostname": "mainnet2.libbitcoin.net",
         "ports": {
-                "secure": 9081,
-                "public": 9091
+                "query": {
+                    "secure": 9081,
+                    "public": 9091
+                },
+                "block": {
+                    "secure": 9083,
+                    "public": 9093
+                }
         }
     },
     {
         "hostname": "mainnet3.libbitcoin.net",
         "ports": {
-                "secure": 9081,
-                "public": 9091
+                "query": {
+                    "secure": 9081,
+                    "public": 9091
+                },
+                "block": {
+                    "secure": 9083,
+                    "public": 9093
+                }
         }
+
     },
     {
         "hostname": "mainnet4.libbitcoin.net",
         "ports": {
-                "secure": 9081,
-                "public": 9091
+                "query": {
+                    "secure": 9081,
+                    "public": 9091
+                },
+                "block": {
+                    "secure": 9083,
+                    "public": 9093
+                }
         }
     }
 ]

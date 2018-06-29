@@ -1,19 +1,18 @@
 """ This module represents ONE libbitcoin backend server
 """
-from urllib.parse import urlparse
 import pylibbitcoin.client
 
 
+PUBLIC_PORT = "public"
+SECURE_PORT = "secure"
+
 class Server:
     def __init__(self, connection_details, settings, loop):
-        def url_from(server):
-            return "tcp://" + \
-                server["hostname"] + \
-                ":" + \
-                str(server["ports"]["public"])
-
-        self.url = url_from(connection_details)
-        self._client = pylibbitcoin.client.Client(self.url, settings=settings)
+        self._connection_details = connection_details
+        self._client = pylibbitcoin.client.Client(
+            connection_details["hostname"],
+            self.__select_public_ports(connection_details["ports"]),
+            settings=settings)
         self._loop = loop
         self._last_height = None
 
@@ -32,20 +31,26 @@ class Server:
         return self._loop.run_until_complete(self._client.last_height())
 
     def port(self):
-        return urlparse(self.url).port
+        return self.connection_details["ports"]["query"][PUBLIC_PORT]
 
     def host(self):
-        return urlparse(self.url).hostname
+        return self.connection_details["hostname"]
 
     def protocol(self):
-        return urlparse(self.url).scheme
+        return "tcp://"
+
+    def __select_public_ports(self, connection_details):
+        return {
+            "query": connection_details["query"][PUBLIC_PORT],
+            "block": connection_details["block"][PUBLIC_PORT],
+        }
 
     def __eq__(self, other):
-        return self.url == other.url
+        return self.connection_details == other.connection_details
 
     def __ne__(self, other):
-        return self.url != other.url
+        return self.connection_details != other.connection_details
 
     def __str__(self):
         return "libbitcoin.Server(url: {}, height: {})" \
-            .format(self.url, self._last_height)
+            .format(self._connection_details["host"], self._last_height)
