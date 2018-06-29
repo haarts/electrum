@@ -57,18 +57,32 @@ class TestLibbitcoin(unittest.TestCase):
 
 
 class TestServer(asynctest.TestCase):
+    connection_details = {
+        "hostname": "smt",
+        "ports": {
+            "query": {
+                "public": 9091,
+            },
+            "block": {
+                "public": 9093,
+            }
+        }
+    }
+
     def test_initial_api_call(self):
-        height = 500_000
+        expected_height = 500_000
         client_mock = asynctest.mock.MagicMock()
         client_mock.return_value.last_height = \
-            asynctest.CoroutineMock(return_value=(None, height))
+            asynctest.CoroutineMock(return_value=(None, expected_height))
         pylibbitcoin.client.Client = client_mock
 
-        server = Server({"hostname": "smt", "ports": {"public": 9091}}, None)
-        self.assertEqual(height, server.last_height()[1])
+        server = Server(self.connection_details, None, self.loop)
+        remote_height = asyncio.get_event_loop().run_until_complete(server.last_height())[1]
+
+        self.assertEqual(expected_height, remote_height)
 
     def test_is_connected(self):
-        server = Server({"hostname": "smt", "ports": {"public": 9091}}, None)
+        server = Server(self.connection_details, None, self.loop)
         self.assertFalse(server.is_connected())
 
         server._last_height = 0
