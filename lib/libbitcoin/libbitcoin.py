@@ -38,6 +38,7 @@ class Libbitcoin(DaemonThread, Protocol, Triggers):
         """
         self._loop.run_until_complete(self.connect())
         self._is_connecting = False
+        self.active_server = self._servers[0]
         self._loop.run_forever()
 
     def stop(self):
