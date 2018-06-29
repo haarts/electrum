@@ -27,6 +27,9 @@ class Server:
     def is_connected(self):
         return self._last_height is not None
 
+    def subscribe_to_headers(self):
+        return self._client.subscribe_to_headers()
+
     def last_height(self):
         return self._client.last_height()
 

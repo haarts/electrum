@@ -1,3 +1,6 @@
+import asyncio
+
+
 class Protocol():
     """ The Protocol class defines all mappings between the Libbitcoin API
     and the internal Electrum API.
@@ -24,7 +27,22 @@ class Protocol():
         pass
 
     def subscribe_to_headers(self, callback=None):
-        pass
+        future = asyncio.run_coroutine_threadsafe(
+            self.active_server.subscribe_to_headers(),
+            self._loop)
+        queue = future.result()  # this call blocks, shortly
+
+        if not callback:
+            return queue
+
+        return asyncio.run_coroutine_threadsafe(
+            self.__process_items(queue.get, callback),
+            self._loop)
+
+    async def __process_items(self, get, callback):
+        while True:
+            result = await get()
+            callback(result)
 
     def get_merkle_for_transaction(self, tx_hash, tx_height, callback=None):
         pass
