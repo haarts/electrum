@@ -39,11 +39,6 @@ class Protocol():
             self.__process_items(queue.get, callback),
             self._loop)
 
-    async def __process_items(self, get, callback):
-        while True:
-            result = await get()
-            callback(result)
-
     def get_merkle_for_transaction(self, tx_hash, tx_height, callback=None):
         pass
 
@@ -64,3 +59,9 @@ class Protocol():
 
     def server_version(self, client_name, protocol_version, callback=None):
         pass
+
+    async def __process_items(self, get, callback):
+        while True:
+            result = await get()
+            callback(result)
+
