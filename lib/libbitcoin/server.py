@@ -49,10 +49,10 @@ class Server:
         }
 
     def __eq__(self, other):
-        return self.connection_details == other.connection_details
+        return self._connection_details == other._connection_details
 
     def __ne__(self, other):
-        return self.connection_details != other.connection_details
+        return self._connection_details != other._connection_details
 
     def __str__(self):
         return "libbitcoin.Server(url: {}, height: {})" \

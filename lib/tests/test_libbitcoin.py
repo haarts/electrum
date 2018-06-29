@@ -12,7 +12,7 @@ from lib.libbitcoin.server import Server
 
 class TestLibbitcoin(unittest.TestCase):
     def setUp(self):
-        Libbitcoin._servers_from = lambda x, y: [MagicMock(autospec=Server)]
+        Libbitcoin._servers_from = lambda x, y, z: [MagicMock(autospec=Server)]
         self.libbitcoin = Libbitcoin(None)
         self.libbitcoin.disconnect = lambda: None
 
@@ -22,11 +22,13 @@ class TestLibbitcoin(unittest.TestCase):
     def test_is_connected(self):
         self.assertFalse(self.libbitcoin.is_connected())
 
-        self.libbitcoin._servers = [MagicMock(autospec=Server, last_height=1)]
+        server = MagicMock(autospec=Server)
+        server.is_connected.return_value = True
+        self.libbitcoin._servers = [server]
         self.assertTrue(self.libbitcoin.is_connected())
 
     def test_is_connecting(self):
-        self.assertFalse(self.libbitcoin.is_connecting())
+        self.assertTrue(self.libbitcoin.is_connecting())
 
     def test_servers_wo_recent_servers(self):
         self.assertEqual(1, len(self.libbitcoin.get_servers()))
@@ -40,7 +42,9 @@ class TestLibbitcoin(unittest.TestCase):
         pylibbitcoin.client.Client = MagicMock(autospec=Server)
         self.assertEqual(1, len(self.libbitcoin._servers))
         self.libbitcoin.set_parameters("example.com", "9091", "", None, True)
-        self.assertEqual("tcp://example.com:9091", self.libbitcoin.active_server.url)
+        self.assertEqual(
+            "example.com",
+            self.libbitcoin.active_server._connection_details["hostname"])
         self.assertEqual(2, len(self.libbitcoin._servers))
 
     def test_set_parameters_existing_server(self):

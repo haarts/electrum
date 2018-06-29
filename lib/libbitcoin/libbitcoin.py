@@ -67,7 +67,7 @@ class Libbitcoin(DaemonThread, Protocol, Triggers):
 
     def is_connected(self):
         return next(
-            (True for server in self._servers if server.is_connected()),
+            (True for server in self._servers if server.is_connected() == True),
             False
         )
 
@@ -117,8 +117,12 @@ class Libbitcoin(DaemonThread, Protocol, Triggers):
         """ The 'server' argument is a string <host>:<port>:<protocol>
         """
         host, port = server.split(':')
-        server = Server({"hostname": host, "ports": {"public": port}},
-                        self._client_settings)
+        connection_details = {
+            "hostname": host,
+            "ports": {"query": {"public": port}, "block": {"public": port}}}
+        server = Server(connection_details,
+                        self._client_settings,
+                        self._loop)
         if server in self._servers:
             server = next(
                 (existing for existing in self._servers if existing == server))
