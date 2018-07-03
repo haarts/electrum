@@ -23,9 +23,10 @@ class Libbitcoin(DaemonThread, Protocol, Triggers):
         self._blockchains = blockchain.read_blockchains("/tmp/blockchains")
 
         self._loop = asyncio.new_event_loop()
-        self._client_settings = self._client_settings(client_settings)
+        self._client_settings = self.__client_settings(client_settings)
         self._auto_connect = True
         self._is_connecting = True
+        self._proxy = None
         self._servers = Libbitcoin._servers_from(
             self._client_settings,
             Libbitcoin._servers_from_file(),
@@ -115,7 +116,7 @@ class Libbitcoin(DaemonThread, Protocol, Triggers):
         """
         self.switch_to_interface(":".join([host, port]))
 
-        self.auto_connect = auto_connect
+        self._auto_connect = auto_connect
 
     # NOTE: the name of the method is legacy in a sense. Libbitcoin doesn't
     # have the concept of 'interface'. `switch_to_server` is a better name.
@@ -159,11 +160,13 @@ class Libbitcoin(DaemonThread, Protocol, Triggers):
     # private methods
 
     # TODO 'self' is really dumb here. I should reconsider the constructor.
-    def _client_settings(self, client_settings):
+    def __client_settings(self, client_settings):
         if client_settings is None:
+            ctx = zmq.asyncio.Context()
+            ctx.linger = 500
             return pylibbitcoin.client.ClientSettings(
                 timeout=2,
-                context=zmq.asyncio.Context(),
+                context=ctx,
                 loop=self._loop,
             )
 
