@@ -34,42 +34,48 @@ class Libbitcoin(DaemonThread, Protocol, Triggers):
         self.active_server = None
 
     def run(self):
-        """ This method is called when the thread starts
+        """ This method is called when the thread starts.
+
+        Here we don't need to take into account the thread saveness because
+        this method is called by the 'start' method which is called on the
+        same thread.
         """
-        self._loop.run_until_complete(self.connect())
-        self._is_connecting = False
-        self.active_server = self._servers[0]
+        self._loop.run_until_complete(self.__connect())
         self._loop.run_forever()
 
     def stop(self):
         """ This method SHOULD be called when stopping the program. Is method
         is overwritten from the DaemonThread super class.
+
+        We can't use a nice `asyncio.gather` or similar because these calls are
+        not thread safe.
         """
-        self._loop.run_until_complete(self.disconnect())
-        self._loop.stop()
+        for server in self._servers:
+            asyncio.run_coroutine_threadsafe(
+                server.disconnect(), self._loop).result()
+
+        self._loop.call_soon_threadsafe(self._loop.stop)
         self.on_stop()
 
-    def connect(self):
+    async def __connect(self):
         self._is_connecting = True
-        return asyncio.gather(
-            *[server.connect() for server in self._servers],
+        await asyncio.wait(
+            [server.connect() for server in self._servers],
             loop=self._loop,
+            return_when=asyncio.FIRST_COMPLETED,
         )
 
-    def disconnect(self):
-        return asyncio.gather(
-            *[server.disconnect() for server in self._servers],
-            loop=self._loop,
-        )
+        self.active_server = next(self.__connected_servers())
+        self._is_connecting = False
 
     def get_server_height(self):
         return self.active_server.last_height()[1]
 
     def is_connected(self):
-        return next(
-            (True for server in self._servers if server.is_connected() == True),
+        return True if next(
+            self.__connected_servers(),
             False
-        )
+        ) else False
 
     def is_connecting(self):
         return self._is_connecting
@@ -172,3 +178,7 @@ class Libbitcoin(DaemonThread, Protocol, Triggers):
         # read packaged servers
         return constants.read_json(
             os.path.join("libbitcoin", "servers.json"), [])
+
+    def __connected_servers(self):
+        return (server for server
+                in self._servers if server.is_connected() is True)

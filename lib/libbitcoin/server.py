@@ -16,13 +16,13 @@ class Server:
         self._loop = loop
         self._last_height = None
 
-    async def disconnect(self):
-        return await self._client.stop()
-
     async def connect(self):
         error_code, last_height = await self._client.last_height()
         self._last_height = last_height
         return error_code
+
+    async def disconnect(self):
+        await self._client.stop()
 
     def is_connected(self):
         return self._last_height is not None
