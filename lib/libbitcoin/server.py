@@ -31,7 +31,7 @@ class Server:
 
     # NOTE: I'm not convinced that the order of the headers is monotomically
     # increasing.
-    async def headers(self, start_height, count):
+    async def block_headers(self, start_height, count):
         coros = []
         for height in range(start_height, start_height + count):
             coros.append(self.block_header(height))

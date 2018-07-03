@@ -95,7 +95,7 @@ class TestServer(asynctest.TestCase):
         server._last_height = 0
         self.assertTrue(server.is_connected())
 
-    def test_headers(self):
+    def test_block_headers(self):
         client_mock = asynctest.mock.MagicMock()
         client_mock.return_value.block_header = asynctest.CoroutineMock(
             return_value=(None, 1))
@@ -103,6 +103,6 @@ class TestServer(asynctest.TestCase):
         server = Server(self.connection_details, None, self.loop)
 
         asyncio.get_event_loop().run_until_complete(
-            server.headers(500_000, 100))  # starting from header 500_000 get the next 100
+            server.block_headers(500_000, 100))  # starting from header 500_000 get the next 100
 
         self.assertEqual(100, client_mock.return_value.block_header.call_count)

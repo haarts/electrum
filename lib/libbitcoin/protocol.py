@@ -38,7 +38,7 @@ class Protocol():
 
     def headers(self, start_height, count, callback=None):
         future = asyncio.run_coroutine_threadsafe(
-            self.active_server.headers(start_height, count),
+            self.active_server.block_headers(start_height, count),
             self._loop)
 
         if not callback:
