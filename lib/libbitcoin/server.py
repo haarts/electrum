@@ -29,6 +29,15 @@ class Server:
     def is_connected(self):
         return self._last_height is not None
 
+    async def subscribe_addresses(self, hashes):
+        coros = [self.subscribe_address(hash_) for hash_ in hashes]
+
+        return await asyncio.gather(*coros, loop=self._loop)
+
+    async def subscribe_address(self, address):
+        _, queue = await self._client.subscribe_address(address)
+        return queue
+
     # NOTE: I'm not convinced that the order of the headers is monotomically
     # increasing.
     async def block_headers(self, start_height, count):

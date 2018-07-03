@@ -22,7 +22,14 @@ class Protocol():
     """
 
     def subscribe_to_scripthashes(self, hashes, callback=None):
-        pass
+        future = asyncio.run_coroutine_threadsafe(
+            self.active_server.subscribe_addresses(hashes),
+            self._loop)
+
+        if not callback:
+            return future.result(TIMEOUT)
+
+        future.add_done_callback(unpack_result(callback))
 
     def subscribe_to_addresses(self, addresses, callback=None):
         pass

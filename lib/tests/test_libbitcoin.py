@@ -106,3 +106,17 @@ class TestServer(asynctest.TestCase):
             server.block_headers(500_000, 100))  # starting from header 500_000 get the next 100
 
         self.assertEqual(100, client_mock.return_value.block_header.call_count)
+
+    def test_subscribe_addresses(self):
+        client_mock = asynctest.mock.MagicMock()
+        client_mock.return_value.subscribe_address = asynctest.CoroutineMock(
+            return_value=(None, MagicMock(spec=asyncio.Queue)))
+        pylibbitcoin.client.Client = client_mock
+        server = Server(self.connection_details, None, self.loop)
+
+        asyncio.get_event_loop().run_until_complete(
+            server.subscribe_addresses(['a', 'b', 'c']))
+
+        self.assertEqual(
+            3,
+            client_mock.return_value.subscribe_address.call_count)
