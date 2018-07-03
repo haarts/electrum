@@ -55,5 +55,5 @@ class Server:
         return self._connection_details != other._connection_details
 
     def __str__(self):
-        return "libbitcoin.Server(url: {}, height: {})" \
-            .format(self._connection_details["host"], self._last_height)
+        return "libbitcoin.Server(hostname: {}, height: {})" \
+            .format(self._connection_details["hostname"], self._last_height)
