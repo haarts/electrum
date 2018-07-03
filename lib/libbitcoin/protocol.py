@@ -1,5 +1,18 @@
 import asyncio
 
+TIMEOUT = 10
+
+
+def unpack_result(callback):
+    """ Callbacks added to concurrent.futures.Future objects get that future
+    as an argument. Electrum callbacks passed expect the result of that future.
+    This method wraps the original callback in a new callback which passes the
+    result of the future to the original callback
+    """
+    def unpacking_callback(future):
+        callback(future.result())
+    return unpacking_callback
+
 
 class Protocol():
     """ The Protocol class defines all mappings between the Libbitcoin API
@@ -24,7 +37,14 @@ class Protocol():
         pass
 
     def headers(self, start_height, count, callback=None):
-        pass
+        future = asyncio.run_coroutine_threadsafe(
+            self.active_server.headers(start_height, count),
+            self._loop)
+
+        if not callback:
+            return future.result(TIMEOUT)
+
+        future.add_done_callback(unpack_result(callback))
 
     def subscribe_to_headers(self, callback=None):
         future = asyncio.run_coroutine_threadsafe(

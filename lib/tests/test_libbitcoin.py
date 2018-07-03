@@ -5,7 +5,8 @@ import pylibbitcoin.client
 import zmq.asyncio
 
 from unittest.mock import MagicMock
-from lib.simple_config import SimpleConfig
+
+import lib.blockchain
 from lib.libbitcoin.libbitcoin import Libbitcoin
 from lib.libbitcoin.server import Server
 
@@ -13,6 +14,7 @@ from lib.libbitcoin.server import Server
 class TestLibbitcoin(unittest.TestCase):
     def setUp(self):
         Libbitcoin._servers_from = lambda x, y, z: [MagicMock(autospec=Server)]
+        lib.blockchain.read_blockchains = lambda header_dir: []
         self.libbitcoin = Libbitcoin(None)
         self.libbitcoin.disconnect = lambda: None
 
@@ -81,7 +83,8 @@ class TestServer(asynctest.TestCase):
         pylibbitcoin.client.Client = client_mock
 
         server = Server(self.connection_details, None, self.loop)
-        remote_height = asyncio.get_event_loop().run_until_complete(server.last_height())[1]
+        remote_height = asyncio.get_event_loop().run_until_complete(
+            server.last_height())[1]
 
         self.assertEqual(expected_height, remote_height)
 
@@ -91,3 +94,15 @@ class TestServer(asynctest.TestCase):
 
         server._last_height = 0
         self.assertTrue(server.is_connected())
+
+    def test_headers(self):
+        client_mock = asynctest.mock.MagicMock()
+        client_mock.return_value.block_header = asynctest.CoroutineMock(
+            return_value=(None, 1))
+        pylibbitcoin.client.Client = client_mock
+        server = Server(self.connection_details, None, self.loop)
+
+        asyncio.get_event_loop().run_until_complete(
+            server.headers(500_000, 100))  # starting from header 500_000 get the next 100
+
+        self.assertEqual(100, client_mock.return_value.block_header.call_count)

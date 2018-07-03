@@ -1,10 +1,12 @@
 """ This module represents ONE libbitcoin backend server
 """
 import pylibbitcoin.client
+import asyncio
 
 
 PUBLIC_PORT = "public"
 SECURE_PORT = "secure"
+
 
 class Server:
     def __init__(self, connection_details, settings, loop):
@@ -26,6 +28,19 @@ class Server:
 
     def is_connected(self):
         return self._last_height is not None
+
+    # NOTE: I'm not convinced that the order of the headers is monotomically
+    # increasing.
+    async def headers(self, start_height, count):
+        coros = []
+        for height in range(start_height, start_height + count):
+            coros.append(self.block_header(height))
+
+        return await asyncio.gather(*coros, loop=self._loop)
+
+    async def block_header(self, height):
+        _, header = await self._client.block_header(height)
+        return header
 
     def subscribe_to_headers(self):
         return self._client.subscribe_to_headers()
