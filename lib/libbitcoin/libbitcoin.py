@@ -16,13 +16,13 @@ class Libbitcoin(DaemonThread, Protocol, Triggers):
     """ Libbitcoin brings everything together.
     """
 
-    def __init__(self, client_settings=None):
+    def __init__(self, loop, client_settings=None):
         DaemonThread.__init__(self)
 
         # FIXME passing path like that is an utter hack
         self._blockchains = blockchain.read_blockchains("/tmp/blockchains")
 
-        self._loop = asyncio.new_event_loop()
+        self._loop = loop
         self._client_settings = self.__client_settings(client_settings)
         self._auto_connect = True
         self._is_connecting = True
