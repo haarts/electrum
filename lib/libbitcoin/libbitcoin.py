@@ -6,6 +6,7 @@ import pylibbitcoin.client
 
 from lib import constants
 from lib import blockchain
+from lib import blockchains
 from lib.triggers import Triggers
 from lib.util import DaemonThread
 from lib.libbitcoin.protocol import Protocol
@@ -42,6 +43,7 @@ class Libbitcoin(DaemonThread, Protocol, Triggers):
         same thread.
         """
         self._loop.run_until_complete(self.__connect())
+        asyncio.ensure_future(self.__update_blockchains(), loop=self._loop)
         self._loop.run_forever()
 
     def stop(self):
@@ -158,6 +160,12 @@ class Libbitcoin(DaemonThread, Protocol, Triggers):
         pass
 
     # private methods
+    async def __update_blockchains(self):
+        synchronizer = blockchains.Blockchains(
+            self.__connected_servers(),
+            self._blockchains.values())
+        asyncio.ensure_future(synchronizer.catch_up(), loop=self._loop)
+        asyncio.ensure_future(synchronizer.monitor_servers(), loop=self._loop)
 
     # TODO 'self' is really dumb here. I should reconsider the constructor.
     def __client_settings(self, client_settings):
