@@ -55,15 +55,18 @@ class Blockchains:
 
         return False
 
+    # NOTE: this fetches headers one by one and could be upgraded later to
+    # fetch batches.
     async def __catch_up(self, blockchain):
         server = await self.__find_server(blockchain)
         if not server:
             return
 
-        server_height = await server.last_height()
+        _, server_height = await server.last_height()
         for missing in range(blockchain.height() + 1, server_height + 1):
             header = await server.block_header(missing)
-            blockchain.save_header(header)
+            compatible_header = self.__to_local(header, missing)
+            blockchain.save_header(compatible_header)
 
     async def __find_server(self, blockchain):
         for server in self._servers:
@@ -74,4 +77,12 @@ class Blockchains:
 
     async def __is_matching(self, server, blockchain):
         next_header = await server.block_header(blockchain.height())
-        return blockchain.can_connect(next_header)
+        compatible_header = self.__to_local(next_header, blockchain.height())
+        return blockchain.can_connect(compatible_header, check_height=False)
+
+    @staticmethod
+    def __to_local(cblock_header, height):
+        """ Convert a bitcoin.core.CBlockHeader to a lib.blockchain compatible
+        header"""
+        return lib.blockchain.deserialize_header(
+            cblock_header.serialize(), height)
