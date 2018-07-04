@@ -80,7 +80,17 @@ class Libbitcoin(DaemonThread, Protocol, Triggers):
         return [server for server in self._servers if server.is_connected()]
 
     def get_servers(self):
-        return self._servers
+        """ Return a dictionary compatible with the one returned in the
+        lib/network module. That explains the cast to string.
+        """
+        servers = {}
+        for server in self._servers:
+            servers[server.connection_details["hostname"]] = {
+                't': str(server.connection_details["ports"]["query"]["public"]),
+                's': str(server.connection_details["ports"]["query"]["secure"])
+            }
+
+        return servers
 
     # FIXME this method is doing a lot of things and should be split into:
     # get_proxy

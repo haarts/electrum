@@ -64,7 +64,11 @@ class Server:
         return self.connection_details["hostname"]
 
     def protocol(self):
-        return "tcp://"
+        """ in the context of Electrum protocol can have two values:
+            - 't': plain, unsecured tcp
+            = 's': tcp secured with ssl/tls
+        """
+        return "t"
 
     def __select_public_ports(self, connection_details):
         return {

@@ -33,7 +33,16 @@ class TestLibbitcoin(unittest.TestCase):
         self.assertTrue(self.libbitcoin.is_connecting())
 
     def test_servers_wo_recent_servers(self):
-        self.assertEqual(1, len(self.libbitcoin.get_servers()))
+        server = MagicMock(autospec=Server)
+        server.connection_details = {
+            "hostname": "some-host",
+            "ports": {"query": {"public": 9091, "secure": 9093}}}
+        self.libbitcoin._servers = [server]
+
+        servers = self.libbitcoin.get_servers()
+        self.assertEqual(1, len(servers))
+        self.assertEqual("some-host", list(servers.keys())[0])
+        self.assertEqual("9091", servers["some-host"]["t"])
 
     @unittest.skip("pending")
     def test_servers_w_recent_servers(self):
