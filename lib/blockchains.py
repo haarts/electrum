@@ -4,6 +4,8 @@ of all blockchains advertised by the remote backends.
 from typing import List
 import asyncio
 
+import bitcoin.core
+
 from lib.libbitcoin.server import Server
 import lib.blockchain
 
@@ -31,16 +33,20 @@ class Blockchains:
 
     async def __process_blocks_for(self, queue):
         while True:
-            header = await queue.get()
-            blockchain = lib.blockchain.find_blockchain_to_append(header)
+            _, height, block = await queue.get()
+            compatible_header = self.__to_local_from_block(
+                block,
+                self.__fix_libbitcoin_bug(height))
+            blockchain = lib.blockchain.find_blockchain_to_append(
+                compatible_header)
 
             # Simple case: append the header to an existing chain
             if blockchain:
-                blockchain.save_header(header)
+                blockchain.save_header(compatible_header)
                 continue
 
             # The header received is already stored, we can safely ignore it
-            if self.__is_header_already_stored(header):
+            if self.__is_header_already_stored(compatible_header):
                 continue
 
             # A header is received which can not be tied to a local
@@ -86,3 +92,23 @@ class Blockchains:
         header"""
         return lib.blockchain.deserialize_header(
             cblock_header.serialize(), height)
+
+    @staticmethod
+    def __to_local_from_block(cblock, height):
+        """ Convert a bitcoin.core.CBlock to a lib.blockchain compatible
+        header"""
+        return lib.blockchain.deserialize_header(
+            bitcoin.core.CBlockHeader(
+                cblock.nVersion,
+                cblock.hashPrevBlock,
+                cblock.hashMerkleRoot,
+                cblock.nTime,
+                cblock.nBits,
+                cblock.nNonce,
+            ).serialize(), height)
+
+    @staticmethod
+    def __fix_libbitcoin_bug(height):
+        """ Make the fact we are fixing a temporary bug stupidly obvious
+        """
+        return height + 1
