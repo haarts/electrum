@@ -51,8 +51,8 @@ class Server:
         _, header = await self._client.block_header(height)
         return header
 
-    def subscribe_to_headers(self):
-        return self._client.subscribe_to_headers()
+    def subscribe_to_blocks(self):
+        return self._client.subscribe_to_blocks()
 
     def last_height(self):
         return self._client.last_height()

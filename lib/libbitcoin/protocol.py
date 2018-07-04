@@ -55,7 +55,7 @@ class Protocol():
 
     def subscribe_to_headers(self, callback=None):
         future = asyncio.run_coroutine_threadsafe(
-            self.active_server.subscribe_to_headers(),
+            self.active_server.subscribe_to_blocks(),
             self._loop)
         queue = future.result()  # this call blocks, shortly
 

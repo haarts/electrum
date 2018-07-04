@@ -27,9 +27,9 @@ class Blockchains:
 
     async def monitor_servers(self):
         queues = [await self.__monitor(server) for server in self._servers]
-        [await self.__process_headers_for(queue) for queue in queues]
+        [await self.__process_blocks_for(queue) for queue in queues]
 
-    async def __process_headers_for(self, queue):
+    async def __process_blocks_for(self, queue):
         while True:
             header = await queue.get()
             blockchain = lib.blockchain.find_blockchain_to_append(header)
@@ -47,7 +47,7 @@ class Blockchains:
             # representation.
 
     async def __monitor(self, server) -> asyncio.Queue:
-        return await server.subscribe_to_headers()
+        return await server.subscribe_to_blocks()
 
     def __is_header_already_stored(self, header):
         if lib.blockchain.find_blockchain_containing(header):
