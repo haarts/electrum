@@ -60,17 +60,6 @@ class Libbitcoin(DaemonThread, Protocol, Triggers):
         self._loop.call_soon_threadsafe(self._loop.stop)
         self.on_stop()
 
-    async def __connect(self):
-        self._is_connecting = True
-        await asyncio.wait(
-            [server.connect() for server in self._servers],
-            loop=self._loop,
-            return_when=asyncio.FIRST_COMPLETED,
-        )
-
-        self.active_server = next(self.__connected_servers())
-        self._is_connecting = False
-
     def get_server_height(self):
         return self.active_server.last_height()[1]
 
@@ -166,6 +155,17 @@ class Libbitcoin(DaemonThread, Protocol, Triggers):
             self._blockchains.values())
         asyncio.ensure_future(synchronizer.catch_up(), loop=self._loop)
         asyncio.ensure_future(synchronizer.monitor_servers(), loop=self._loop)
+
+    async def __connect(self):
+        self._is_connecting = True
+        await asyncio.wait(
+            [server.connect() for server in self._servers],
+            loop=self._loop,
+            return_when=asyncio.FIRST_COMPLETED,
+        )
+
+        self.active_server = next(self.__connected_servers())
+        self._is_connecting = False
 
     # TODO 'self' is really dumb here. I should reconsider the constructor.
     def __client_settings(self, client_settings):
