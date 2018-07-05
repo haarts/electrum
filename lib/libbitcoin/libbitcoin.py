@@ -187,7 +187,7 @@ class Libbitcoin(DaemonThread, Protocol, Triggers):
         pass
 
     def get_local_height(self):
-        pass
+        return self.blockchain().height()
 
     # private methods
     async def __update_blockchains(self):
