@@ -95,6 +95,11 @@ class TestLibbitcoin(asynctest.TestCase):
         chains = self.libbitcoin.get_blockchains()
         self.assertEqual({0: local_chain}, chains)
 
+    def test_fetch_missing_headers_around(self):
+        self.libbitcoin.active_server = MagicMock(spec=Server)
+        self.libbitcoin.fetch_missing_headers_around(5000)
+        self.libbitcoin.active_server.block_headers.assert_called_with(4032, 2016)
+
 
 class TestServer(asynctest.TestCase):
     connection_details = {

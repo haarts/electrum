@@ -13,6 +13,7 @@ from lib.libbitcoin.protocol import Protocol
 from lib.libbitcoin.server import Server
 
 TIMEOUT = 5
+CHECKPOINT_SIZE = 2016
 
 
 class Libbitcoin(DaemonThread, Protocol, Triggers):
@@ -147,8 +148,11 @@ class Libbitcoin(DaemonThread, Protocol, Triggers):
     def unsubscribe(self, callback):
         pass
 
-    def fetch_missing_headers_around(self, tx_height):
-        pass
+    def fetch_missing_headers_around(self, height):
+        start_height = height // CHECKPOINT_SIZE
+
+        self._loop.call_soon_threadsafe(
+            self.active_server.block_headers, start_height, CHECKPOINT_SIZE)
 
     def blockchain(self):
         """ Returns the local chain which mirrors the chain advertised by the
