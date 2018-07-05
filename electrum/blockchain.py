@@ -72,11 +72,14 @@ def hash_header(header):
     return hash_encode(Hash(bfh(serialize_header(header))))
 
 
-# This dict contains a mapping between a checkpoint and a blockchain
+# This dict contains a mapping between a 'fork height' and a blockchain
 blockchains = {}
 
 
 def read_blockchains(headers_dir):
+    """ Returns a dict of blockchains.
+    NOTE: this ALSO sets the package level variable 'blockchains'
+    """
     blockchains[0] = Blockchain(headers_dir, 0, None)
     fdir = os.path.join(util.get_headers_dir(headers_dir), 'forks')
     util.make_dir(fdir)
@@ -95,7 +98,8 @@ def read_blockchains(headers_dir):
 
 
 def find_blockchain_containing(header):
-    """ Returns the blockchain of which the supplied header is a part.
+    """ Returns the blockchain of which the supplied header is a part and on
+    the correct height.
     """
     if type(header) is not dict:
         return None
@@ -124,8 +128,8 @@ class Blockchain(util.PrintError):
 
     def __init__(self, headers_dir, checkpoint, parent_id):
         self.headers_dir = headers_dir
-        self.catch_up = None # interface catching up
-        self.checkpoint = checkpoint
+        self.catch_up = None  # interface catching up
+        self.checkpoint = checkpoint  # this is not a checkpoint but a height on the parent chain from which this chain forked  # noqa: E501
         self.checkpoints = constants.net.CHECKPOINTS
         self.parent_id = parent_id
         self.lock = threading.Lock()
