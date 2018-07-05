@@ -150,8 +150,6 @@ class Libbitcoin(DaemonThread, Protocol, Triggers):
     def fetch_missing_headers_around(self, tx_height):
         pass
 
-    # FIXME should be called 'get_blockchain' (or 'get_blockchains' should be
-    # 'blockchains')
     def blockchain(self):
         """ Returns the local chain which mirrors the chain advertised by the
         active server.
@@ -164,7 +162,7 @@ class Libbitcoin(DaemonThread, Protocol, Triggers):
         return blockchain.find_blockchain_containing(blockchains.to_local(
             last_header, last_height))
 
-    def get_blockchains(self):
+    def blockchains(self):
         """ Returns all the local chains which have a remote advertising it.
         """
         finder = blockchains.Blockchains(
@@ -178,6 +176,13 @@ class Libbitcoin(DaemonThread, Protocol, Triggers):
 
         return out
 
+    def get_blockchains(self):
+        """ Legacy name from the Network class.
+        """
+        return self.blockchains()
+
+    # NOTE 'follow_chain' and 'switch_to_interface' really are more of the
+    # same. We should consider making it uniform.
     def follow_chain(self, index):
         pass
 
