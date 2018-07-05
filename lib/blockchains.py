@@ -9,6 +9,25 @@ import bitcoin.core
 from lib.libbitcoin.server import Server
 import lib.blockchain
 
+def to_local(cblock_header, height):
+    """ Convert a bitcoin.core.CBlockHeader to a lib.blockchain compatible
+    header"""
+    return lib.blockchain.deserialize_header(
+        cblock_header.serialize(), height)
+
+def to_local_from_block(cblock, height):
+    """ Convert a bitcoin.core.CBlock to a lib.blockchain compatible
+    header"""
+    return lib.blockchain.deserialize_header(
+        bitcoin.core.CBlockHeader(
+            cblock.nVersion,
+            cblock.hashPrevBlock,
+            cblock.hashMerkleRoot,
+            cblock.nTime,
+            cblock.nBits,
+            cblock.nNonce,
+        ).serialize(), height)
+
 
 class Blockchains:
     """
@@ -34,7 +53,7 @@ class Blockchains:
     async def __process_blocks_for(self, queue):
         while True:
             _, height, block = await queue.get()
-            compatible_header = self.__to_local_from_block(
+            compatible_header = to_local_from_block(
                 block,
                 self.__fix_libbitcoin_bug(height))
             blockchain = lib.blockchain.find_blockchain_to_append(
@@ -71,7 +90,7 @@ class Blockchains:
         _, server_height = await server.last_height()
         for missing in range(blockchain.height() + 1, server_height + 1):
             header = await server.block_header(missing)
-            compatible_header = self.__to_local(header, missing)
+            compatible_header = to_local(header, missing)
             blockchain.save_header(compatible_header)
 
     async def __find_server(self, blockchain):
@@ -83,29 +102,8 @@ class Blockchains:
 
     async def __is_matching(self, server, blockchain):
         next_header = await server.block_header(blockchain.height())
-        compatible_header = self.__to_local(next_header, blockchain.height())
+        compatible_header = to_local(next_header, blockchain.height())
         return blockchain.can_connect(compatible_header, check_height=False)
-
-    @staticmethod
-    def __to_local(cblock_header, height):
-        """ Convert a bitcoin.core.CBlockHeader to a lib.blockchain compatible
-        header"""
-        return lib.blockchain.deserialize_header(
-            cblock_header.serialize(), height)
-
-    @staticmethod
-    def __to_local_from_block(cblock, height):
-        """ Convert a bitcoin.core.CBlock to a lib.blockchain compatible
-        header"""
-        return lib.blockchain.deserialize_header(
-            bitcoin.core.CBlockHeader(
-                cblock.nVersion,
-                cblock.hashPrevBlock,
-                cblock.hashMerkleRoot,
-                cblock.nTime,
-                cblock.nBits,
-                cblock.nNonce,
-            ).serialize(), height)
 
     @staticmethod
     def __fix_libbitcoin_bug(height):
