@@ -149,7 +149,13 @@ class Libbitcoin(DaemonThread, Protocol, Triggers):
         pass
 
     def fetch_missing_headers_around(self, height):
-        start_height = height // CHECKPOINT_SIZE
+        """ Fetches the block headers between two checkpoints.
+
+        Arguments:
+            height -- the height of a block from which the lower and upper
+            boundary is determined.
+        """
+        start_height = (height // CHECKPOINT_SIZE) * CHECKPOINT_SIZE
 
         self._loop.call_soon_threadsafe(
             self.active_server.block_headers, start_height, CHECKPOINT_SIZE)

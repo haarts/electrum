@@ -16,7 +16,7 @@ class TestLibbitcoin(asynctest.TestCase):
     def setUp(self):
         Libbitcoin._servers_from = lambda x, y, z: [MagicMock(spec=Server)]
         lib.blockchain.read_blockchains = lambda header_dir: {}
-        self.libbitcoin = Libbitcoin(None)
+        self.libbitcoin = Libbitcoin(self.loop)
 
     def tearDown(self):
         pass
@@ -98,6 +98,8 @@ class TestLibbitcoin(asynctest.TestCase):
     def test_fetch_missing_headers_around(self):
         self.libbitcoin.active_server = MagicMock(spec=Server)
         self.libbitcoin.fetch_missing_headers_around(5000)
+        self.loop.run_until_complete(
+            asynctest.helpers.exhaust_callbacks(self.loop))
         self.libbitcoin.active_server.block_headers.assert_called_with(4032, 2016)
 
 
