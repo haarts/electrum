@@ -1293,11 +1293,14 @@ class Abstract_Wallet(PrintError):
                 self.add_unverified_tx(tx_hash, tx_height)
 
     def start_threads(self, network):
+        print("starting threads")
         self.network = network
         if self.network is not None:
             self.verifier = SPV(self.network, self)
-            self.synchronizer = Synchronizer(self, network)
-            network.add_jobs([self.verifier, self.synchronizer])
+            #self.synchronizer = Synchronizer(self, network)
+            #network.add_jobs([self.verifier, self.synchronizer])
+            print("adding jobs")
+            network.add_jobs([self.verifier])
         else:
             self.verifier = None
             self.synchronizer = None

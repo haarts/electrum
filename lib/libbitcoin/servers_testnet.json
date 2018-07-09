@@ -1,0 +1,55 @@
+[
+    {
+        "hostname": "testnet1.libbitcoin.net",
+        "ports": {
+                "query": {
+                    "secure": 19081,
+                    "public": 19091
+                },
+                "block": {
+                    "secure": 19083,
+                    "public": 19093
+                }
+        }
+    },
+    {
+        "hostname": "testnet2.libbitcoin.net",
+        "ports": {
+                "query": {
+                    "secure": 19081,
+                    "public": 19091
+                },
+                "block": {
+                    "secure": 19083,
+                    "public": 19093
+                }
+        }
+    },
+    {
+        "hostname": "testnet3.libbitcoin.net",
+        "ports": {
+                "query": {
+                    "secure": 19081,
+                    "public": 19091
+                },
+                "block": {
+                    "secure": 19083,
+                    "public": 19093
+                }
+        }
+
+    },
+    {
+        "hostname": "testnet4.libbitcoin.net",
+        "ports": {
+                "query": {
+                    "secure": 19081,
+                    "public": 19091
+                },
+                "block": {
+                    "secure": 19083,
+                    "public": 19093
+                }
+        }
+    }
+]

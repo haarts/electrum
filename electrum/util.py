@@ -224,6 +224,7 @@ class DaemonThread(threading.Thread, PrintError):
 
     def add_jobs(self, jobs):
         with self.job_lock:
+            print("adding jobs with lock")
             self.jobs.extend(jobs)
 
     def run_jobs(self):
@@ -231,6 +232,7 @@ class DaemonThread(threading.Thread, PrintError):
         # itself, or other jobs.  This is useful protection against
         # malformed or malicious server responses
         with self.job_lock:
+            print("running jobs with lock")
             for job in self.jobs:
                 try:
                     job.run()

@@ -37,6 +37,7 @@ class SPV(ThreadJob):
         self.blockchain = network.blockchain()
         self.merkle_roots = {}  # txid -> merkle root (once it has been verified)
         self.requested_merkle = set()  # txid set of pending requests
+        print("constructor done, blockchain:", self.blockchain)
 
     def run(self):
         if not self.network.is_connected():

@@ -1,5 +1,7 @@
 import os
+import threading
 import asyncio
+import concurrent.futures
 import zmq.asyncio
 
 import pylibbitcoin.client
@@ -26,7 +28,7 @@ class Libbitcoin(DaemonThread, Protocol, Triggers):
         # FIXME passing path like that is an utter hack
         # self._blockchains = blockchain.read_blockchains("/tmp/blockchains")
         self._blockchains = blockchain.read_blockchains(
-            "/home/harm/.electrum/")
+            "/home/harm/.electrum/testnet")
         # FIXME: This is truly awful:
         blockchain.blockchains = self._blockchains
 
@@ -51,6 +53,8 @@ class Libbitcoin(DaemonThread, Protocol, Triggers):
         """
         self._loop.run_until_complete(self.__connect())
         asyncio.ensure_future(self.__update_blockchains(), loop=self._loop)
+        #asyncio.ensure_future(self.__run_jobs(), loop=self._loop)
+        self._loop.call_soon(self.__run_jobs)
         self._loop.run_forever()
 
     def stop(self):
@@ -167,7 +171,7 @@ class Libbitcoin(DaemonThread, Protocol, Triggers):
         NOTE: this only works if syncing is complete.
         """
         _, last_height = self.__wait_for(self.active_server.last_height)
-        _, last_header = self.__wait_for(
+        last_header = self.__wait_for(
             self.active_server.block_header, last_height)
         return blockchain.find_blockchain_containing(blockchains.to_local(
             last_header, last_height))
@@ -200,6 +204,11 @@ class Libbitcoin(DaemonThread, Protocol, Triggers):
         return self.blockchain().height()
 
     # private methods
+    def __run_jobs(self):
+        print("running jobs")
+        self.run_jobs()
+        self._loop.call_later(3, self.__run_jobs)
+
     async def __update_blockchains(self):
         synchronizer = blockchains.Blockchains(
             self.__connected_servers(),
@@ -237,14 +246,28 @@ class Libbitcoin(DaemonThread, Protocol, Triggers):
 
     def _servers_from_file():
         # TODO read recent servers OR
-        # read packaged servers
+        # read packaged servers OR read testnet
         return constants.read_json(
-            os.path.join("libbitcoin", "servers.json"), [])
+            os.path.join("libbitcoin", "servers_testnet.json"), [])
 
     def __connected_servers(self):
         return (server for server
                 in self._servers if server.is_connected() is True)
 
     def __wait_for(self, it, *args):
-        return asyncio.run_coroutine_threadsafe(
-                it(args), self._loop).result(TIMEOUT)
+        print("it", it)
+        print("main ID", threading.main_thread().ident)
+        print("ID", threading.get_ident())
+        if threading.main_thread().ident == threading.get_ident():
+            return asyncio.run_coroutine_threadsafe(
+                    it(*args), self._loop).result(TIMEOUT)
+
+        #return asyncio.ensure_future(it(*args), loop=self._loop)  # doesn't wait for the result
+        #return self._loop.run_until_complete(it(*args))  # Event loop already runs
+        #return await it(*args)  # __wait_for can't be a coro b/c of the threadsafe call
+        #return it(*args)
+        future = concurrent.futures.Future()
+        def callback():
+            asyncio.ensure_future(it(*args), loop=self._loop)
+        self._loop.call_soon(callback)
+        return future.result(TIMEOUT)
