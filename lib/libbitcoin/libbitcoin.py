@@ -12,6 +12,8 @@ from lib.util import DaemonThread
 from lib.libbitcoin.protocol import Protocol
 from lib.libbitcoin.server import Server
 
+TIMEOUT = 5
+
 
 class Libbitcoin(DaemonThread, Protocol, Triggers):
     """ Libbitcoin brings everything together.
@@ -21,7 +23,10 @@ class Libbitcoin(DaemonThread, Protocol, Triggers):
         DaemonThread.__init__(self)
 
         # FIXME passing path like that is an utter hack
-        self._blockchains = blockchain.read_blockchains("/tmp/blockchains")
+        #self._blockchains = blockchain.read_blockchains("/tmp/blockchains")
+        self._blockchains = blockchain.read_blockchains("/home/harm/.electrum/")
+        # FIXME: This is truly awful:
+        blockchain.blockchains = self._blockchains
 
         self._loop = loop
         self._client_settings = self.__client_settings(client_settings)
@@ -54,8 +59,7 @@ class Libbitcoin(DaemonThread, Protocol, Triggers):
         not thread safe.
         """
         for server in self._servers:
-            asyncio.run_coroutine_threadsafe(
-                server.disconnect(), self._loop).result()
+            self.__wait_for(server.disconnect)
 
         self._loop.call_soon_threadsafe(self._loop.stop)
         self.on_stop()
@@ -147,7 +151,16 @@ class Libbitcoin(DaemonThread, Protocol, Triggers):
 
     # FIXME should be called 'get_blockchain' (or 'get_blockchains' should be 'blockchains')
     def blockchain(self):
-        pass
+        """ Returns the local chain which mirrors the chain advertised by the
+        active server.
+
+        NOTE: this only works if syncing is complete.
+        """
+        _, last_height = self.__wait_for(self.active_server.last_height)
+        _, last_header = self.__wait_for(
+            self.active_server.block_header, last_height)
+        return blockchain.find_blockchain_containing(blockchains.to_local(
+            last_header, last_height))
 
     def get_blockchains(self):
         pass
@@ -203,3 +216,7 @@ class Libbitcoin(DaemonThread, Protocol, Triggers):
     def __connected_servers(self):
         return (server for server
                 in self._servers if server.is_connected() is True)
+
+    def __wait_for(self, it, *args):
+        return asyncio.run_coroutine_threadsafe(
+                it(args), self._loop).result(TIMEOUT)

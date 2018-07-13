@@ -3,6 +3,7 @@ import asyncio
 import asynctest
 import pylibbitcoin.client
 import zmq.asyncio
+import bitcoin.core
 
 from unittest.mock import MagicMock
 
@@ -11,12 +12,11 @@ from lib.libbitcoin.libbitcoin import Libbitcoin
 from lib.libbitcoin.server import Server
 
 
-class TestLibbitcoin(unittest.TestCase):
+class TestLibbitcoin(asynctest.TestCase):
     def setUp(self):
-        Libbitcoin._servers_from = lambda x, y, z: [MagicMock(autospec=Server)]
-        lib.blockchain.read_blockchains = lambda header_dir: []
+        Libbitcoin._servers_from = lambda x, y, z: [MagicMock(spec=Server)]
+        lib.blockchain.read_blockchains = lambda header_dir: {}
         self.libbitcoin = Libbitcoin(None)
-        self.libbitcoin.disconnect = lambda: None
 
     def tearDown(self):
         pass
@@ -50,7 +50,7 @@ class TestLibbitcoin(unittest.TestCase):
         self.assertEqual(2, len(self.libbitcoin.get_servers()))
 
     def test_set_parameters_new_server(self):
-        pylibbitcoin.client.Client = MagicMock(autospec=Server)
+        pylibbitcoin.client.Client = MagicMock()
         self.assertEqual(1, len(self.libbitcoin._servers))
         self.libbitcoin.set_parameters("example.com", "9091", "", None, True)
         self.assertEqual(
@@ -59,7 +59,7 @@ class TestLibbitcoin(unittest.TestCase):
         self.assertEqual(2, len(self.libbitcoin._servers))
 
     def test_set_parameters_existing_server(self):
-        pylibbitcoin.client.Client = MagicMock(autospec=Server)
+        pylibbitcoin.client.Client = MagicMock()
         self.assertEqual(1, len(self.libbitcoin._servers))
         self.libbitcoin.set_parameters("example.com", "9091", None, None, True)
         self.libbitcoin.set_parameters("example.com", "9091", None, None, True)
@@ -70,6 +70,14 @@ class TestLibbitcoin(unittest.TestCase):
         self.libbitcoin.switch_to_interface("example.com:9091")
         self.assertEqual(2, len(self.libbitcoin._servers))
 
+    def test_blockchain(self):
+        lib.blockchain.blockchains[0] = MagicMock(
+            spec=lib.blockchain.Blockchain, check_header=MagicMock(return_value=True))
+        self.libbitcoin._Libbitcoin__wait_for = MagicMock(
+            side_effect=[(None, 1), (None, bitcoin.core.CBlockHeader())])
+        self.libbitcoin.active_server = MagicMock(spec=lib.libbitcoin.server.Server)
+
+        self.assertEqual(self.libbitcoin._blockchains[0], self.libbitcoin.blockchain())
 
 class TestServer(asynctest.TestCase):
     connection_details = {

@@ -11,7 +11,7 @@ from lib.blockchains import Blockchains
 class TestBlockchains(asynctest.TestCase):
     @staticmethod
     def header():
-        """ Taken from block 529438
+        """ Taken from block 529438 and manually converted
         """
         return {'version': 536870912, 'prev_block_hash': '0000000000000000003627505d1d859d86dbb60d2fabc03d185ff2711b1cd665', 'merkle_root': '153ce6fde6d9e749a87177f3f8fbe81338e5d580f3c1e289a8e53ea9d6ae0ca6', 'timestamp': 1530083119, 'bits': 389508950, 'nonce': 1167100690, 'block_height': 529438}  # noqa: E501
 
