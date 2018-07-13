@@ -91,4 +91,3 @@ class Protocol():
         while True:
             result = await get()
             callback(result)
-

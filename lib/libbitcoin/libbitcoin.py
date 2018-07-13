@@ -23,8 +23,9 @@ class Libbitcoin(DaemonThread, Protocol, Triggers):
         DaemonThread.__init__(self)
 
         # FIXME passing path like that is an utter hack
-        #self._blockchains = blockchain.read_blockchains("/tmp/blockchains")
-        self._blockchains = blockchain.read_blockchains("/home/harm/.electrum/")
+        # self._blockchains = blockchain.read_blockchains("/tmp/blockchains")
+        self._blockchains = blockchain.read_blockchains(
+            "/home/harm/.electrum/")
         # FIXME: This is truly awful:
         blockchain.blockchains = self._blockchains
 
@@ -90,7 +91,7 @@ class Libbitcoin(DaemonThread, Protocol, Triggers):
         servers = {}
         for server in self._servers:
             servers[server.connection_details["hostname"]] = {
-                't': str(server.connection_details["ports"]["query"]["public"]),
+                't': str(server.connection_details["ports"]["query"]["public"]),  # noqa: E501
                 's': str(server.connection_details["ports"]["query"]["secure"])
             }
 
@@ -149,7 +150,8 @@ class Libbitcoin(DaemonThread, Protocol, Triggers):
     def fetch_missing_headers_around(self, tx_height):
         pass
 
-    # FIXME should be called 'get_blockchain' (or 'get_blockchains' should be 'blockchains')
+    # FIXME should be called 'get_blockchain' (or 'get_blockchains' should be
+    # 'blockchains')
     def blockchain(self):
         """ Returns the local chain which mirrors the chain advertised by the
         active server.
@@ -163,7 +165,18 @@ class Libbitcoin(DaemonThread, Protocol, Triggers):
             last_header, last_height))
 
     def get_blockchains(self):
-        pass
+        """ Returns all the local chains which have a remote advertising it.
+        """
+        finder = blockchains.Blockchains(
+            self.__connected_servers(),
+            self._blockchains.values())
+        pairs = self.__wait_for(finder.blockchain_servers_pairs)
+        out = {}
+        for fork_height, chain in self._blockchains.items():
+            if len(pairs[chain]) > 0:
+                out[fork_height] = chain
+
+        return out
 
     def follow_chain(self, index):
         pass

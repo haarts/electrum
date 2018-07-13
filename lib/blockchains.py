@@ -9,11 +9,13 @@ import bitcoin.core
 from lib.libbitcoin.server import Server
 import lib.blockchain
 
+
 def to_local(cblock_header, height):
     """ Convert a bitcoin.core.CBlockHeader to a lib.blockchain compatible
     header"""
     return lib.blockchain.deserialize_header(
         cblock_header.serialize(), height)
+
 
 def to_local_from_block(cblock, height):
     """ Convert a bitcoin.core.CBlock to a lib.blockchain compatible
@@ -31,10 +33,12 @@ def to_local_from_block(cblock, height):
 
 class Blockchains:
     """
-    There are two public methods:
+    There are three public methods:
     - catch_up: for each local blockchain finds a server and syncs
     - monitor_servers: subscribes to the headers of all servers and appends
       where possible.
+    - blockchain_servers_pairs: returns a dict of local blockchains
+      and their mirroring servers. Eg: {chain1: [serverA, serverB], ...}
     """
 
     def __init__(self,
@@ -42,6 +46,13 @@ class Blockchains:
                  blockchains: List[lib.blockchain.Blockchain]):
         self._servers = servers
         self._blockchains = blockchains
+
+    async def blockchain_servers_pairs(self):
+        blockchains = {}
+        for chain in self._blockchains:
+            blockchains[chain] = await self.__find_servers(chain)
+
+        return blockchains
 
     async def catch_up(self):
         [await self.__catch_up(blockchain) for blockchain in self._blockchains]
@@ -83,22 +94,23 @@ class Blockchains:
     # NOTE: this fetches headers one by one and could be upgraded later to
     # fetch batches.
     async def __catch_up(self, blockchain):
-        server = await self.__find_server(blockchain)
-        if not server:
+        servers = await self.__find_servers(blockchain)
+        if not servers:
             return
 
+        server = servers[0]
         _, server_height = await server.last_height()
         for missing in range(blockchain.height() + 1, server_height + 1):
             header = await server.block_header(missing)
             compatible_header = to_local(header, missing)
             blockchain.save_header(compatible_header)
 
-    async def __find_server(self, blockchain):
-        for server in self._servers:
-            if await self.__is_matching(server, blockchain):
-                return server
-
-        return None
+    # NOTE: It feel wrong to do these awaits sequential. Ideally I would like
+    # to have a generator.
+    async def __find_servers(self, blockchain):
+        return [server for server
+                in self._servers
+                if await self.__is_matching(server, blockchain)]
 
     async def __is_matching(self, server, blockchain):
         next_header = await server.block_header(blockchain.height())

@@ -7,7 +7,8 @@ from lib.blockchain import Blockchain
 
 class TestBlockchains(unittest.TestCase):
     def test_find_blockchain_containing_wo_dict_header(self):
-        self.assertIsNone(lib.blockchain.find_blockchain_containing("not a dict"))
+        self.assertIsNone(
+            lib.blockchain.find_blockchain_containing("not a dict"))
 
     def test_find_blockchain_containing_w_dict_header(self):
         lib.blockchain.blockchains = {
@@ -40,6 +41,7 @@ class TestBlockchains(unittest.TestCase):
         forked_at_height_2 = blockchains[2]
         forked_from_fork_2_at_height_4 = blockchains[4]
         self.assertEqual(3, len(blockchains))
+
 
 class TestBlockchain(unittest.TestCase):
     def valid_header_after_checkpoints():

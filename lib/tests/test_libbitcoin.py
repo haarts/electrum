@@ -2,12 +2,12 @@ import unittest
 import asyncio
 import asynctest
 import pylibbitcoin.client
-import zmq.asyncio
 import bitcoin.core
 
 from unittest.mock import MagicMock
 
 import lib.blockchain
+import lib.blockchains
 from lib.libbitcoin.libbitcoin import Libbitcoin
 from lib.libbitcoin.server import Server
 
@@ -72,12 +72,29 @@ class TestLibbitcoin(asynctest.TestCase):
 
     def test_blockchain(self):
         lib.blockchain.blockchains[0] = MagicMock(
-            spec=lib.blockchain.Blockchain, check_header=MagicMock(return_value=True))
+            spec=lib.blockchain.Blockchain,
+            check_header=MagicMock(return_value=True))
         self.libbitcoin._Libbitcoin__wait_for = MagicMock(
             side_effect=[(None, 1), (None, bitcoin.core.CBlockHeader())])
-        self.libbitcoin.active_server = MagicMock(spec=lib.libbitcoin.server.Server)
+        self.libbitcoin.active_server = MagicMock(
+            spec=lib.libbitcoin.server.Server)
 
-        self.assertEqual(self.libbitcoin._blockchains[0], self.libbitcoin.blockchain())
+        self.assertEqual(
+            self.libbitcoin._blockchains[0],
+            self.libbitcoin.blockchain())
+
+    def test_get_blockchains(self):
+        local_chain = MagicMock()
+        orphaned_chain = MagicMock()
+        self.libbitcoin._blockchains = {0: local_chain, 1: orphaned_chain}
+        lib.blockchains.Blockchains = MagicMock(
+            spec=lib.blockchains.Blockchains)
+        self.libbitcoin._Libbitcoin__wait_for = MagicMock(
+            return_value={local_chain: [MagicMock()], orphaned_chain: []})
+
+        chains = self.libbitcoin.get_blockchains()
+        self.assertEqual({0: local_chain}, chains)
+
 
 class TestServer(asynctest.TestCase):
     connection_details = {
@@ -119,8 +136,9 @@ class TestServer(asynctest.TestCase):
         pylibbitcoin.client.Client = client_mock
         server = Server(self.connection_details, None, self.loop)
 
+        # starting from header 500_000 get the next 100
         asyncio.get_event_loop().run_until_complete(
-            server.block_headers(500_000, 100))  # starting from header 500_000 get the next 100
+            server.block_headers(500_000, 100))
 
         self.assertEqual(100, client_mock.return_value.block_header.call_count)
 
